@@ -1,0 +1,87 @@
+## Ficheiro para ser sourced e preparar ambiente postgresql
+#  Assume que a diretoria de scripts gbd se encontra na PATH
+
+# L_PG_TYPE     : Tipo de ambiente: admin, client
+# L_PG_CLUSTER  : Nome do cluster/instancia postgresql
+# L_PG_BASEDIR  : Diretoria base da instalacao dos binarios postgresl
+# L_PGDATADIR   : Diretoria base para os ficheiros de dados da instancia/cluster
+# L_PGHOST      : Endereco/nome da maquina da instancia postgresql
+# L_PGPORT      : Porto/Ficheiro de comunicacao
+
+# GBD_SILENT_SETPG : Controla se deve haver menos output
+
+## Source funcoes e variaveis
+. envpg
+
+## O comando clear precisa de ter a variavel TERM definida.
+## Atencao que comando clear pode limpar o buffer do putty.
+#  Se TERM nao estiver definida, definir como vt100.
+export TERM=${TERM:=vt100}
+## Se GBD_SILENT_SETPG nao estiver ser, colocar a zero
+export GBD_SILENT_SETPG=${GBD_SILENT_SETPG:=0}
+
+## Verificar se setpg foi chamado ja com uma opcao
+if [ $# = 1 ]; then
+    L_ANSWER="$1"
+elif [ $# =  0 ]; then
+    ## Setpg foi chamado sem opcao, listar instancias configuradas
+    if [ "${GBD_SILENT_SETPG}" = "0" ]; then 
+        clear
+        cat <<EOF!
+
+  ======== Setting Postgres environment ========
+
+EOF!
+        ## Ler ficheiro com lista de instancias (PG_SERVER_LIST_FILE esta definido pelo script envpg)
+        ## Remove linhas comecadas por espacos, tabs e cardinal ou remove tudo depois do cardinal
+        ## Remove linhas "vazias"
+        sed -e 's/[[:blank:]]*#.*// ; /^[[:blank:]]*$/d' "${PG_SERVER_LIST_FILE}" |
+            while IFS="|" read -r L_OPTION L_DESC L_PG_TYPE L_PG_CLUSTER L_PG_BASEDIR L_PGDATADIR L_PGHOST L_PGPORT; do
+                printf "  Enter %s to set environment for %s (PG %s)\n" "${L_OPTION}" "${L_DESC}" $("${L_PG_BASEDIR}/bin/postgres" -V | awk '{print $3}')
+            done
+        cat <<EOF!
+
+
+  To quit without choosing any option enter 'q'
+
+  Note: For environment switch execute '. setpg [option]'
+
+EOF!
+    fi
+    printf "  Enter an option : "
+    read L_ANSWER
+fi
+
+## Se houver um valor na resposta, verificar 
+if [ ! -z "${L_ANSWER}" ]; then 
+    ## Verificar resposta
+    if [ "${L_ANSWER}" = "q" ] || [ "${L_ANSWER}" = "Q" ]; then
+        printf "  Exiting without choosing any option.\n"
+    else
+        ## Voltar a ler o ficheiro com lista de servidores (TODO: evitar nova leitura)
+        L_CHOICE_LINE=$(sed -e 's/[[:blank:]]*#.*// ; /^[[:blank:]]*$/d' "${PG_SERVER_LIST_FILE}" | grep "^${L_ANSWER}|")
+        ## Verificar se ambiente escolhido corresponde a algum na lista
+        if [ ! -z "${L_CHOICE_LINE}" ]; then
+            ## Efetuar o unset de variaveis de um possivel ambiente anterior
+            unset_extra_pg_vars
+            unset_pg_vars
+            ## Efetuar o parse dos parametros do ambiente (usando uma HERE string <<< para evitar sub shell)
+            IFS='|' read -r L_OPTION L_DESC L_PG_TYPE L_PG_CLUSTER L_PG_BASEDIR L_PGDATADIR L_PGHOST L_PGPORT <<<"${L_CHOICE_LINE}"
+            ## Efetuar o set de variaveis para o ambiente escolhido
+            set_pg_vars "${L_PG_CLUSTER}" "${L_PG_BASEDIR}" "${L_PGDATADIR}" "${L_PGHOST}" "${L_PGPORT}"
+            set_extra_pg_vars "${L_OPTION}"
+            if [ "${GBD_SILENT_SETPG}" = "0" ]; then 
+                clear
+                printf "  Welcome to %s @ %s (PG Version %s)\n\n" "${PG_CLUSTER}" "${L_PGHOST:-local}" "${PG_VERSION}"
+            fi
+        else
+            printf "  Unknown option.\n"
+            ## Usar false para colocar o exit status diferente de zero
+            false
+        fi
+    fi
+else
+    printf "  Invalid arguments.\n"
+    ## Usar false para colocar o exit status diferente de zero
+    false
+fi

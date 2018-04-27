@@ -1,0 +1,192 @@
+## Ficheiro para ser sourced e preparar ambiente postgresql
+## Variaveis utilizadas pelos scripts
+PG_ROOTDIR="/postgresql"
+PG_BASEDIR="${PG_ROOTDIR}/basedir"
+export PG_ROOTDIR
+export PG_BASEDIR
+
+## Definicao de contatos para a alarmitica
+GBD_FROM_EMAIL="postgres"
+GBD_TO_EMAIL="dba-postgres@telecom.pt"
+export GBD_FROM_EMAIL
+export GBD_TO_EMAIL
+
+
+## Ficheiro com lista de instancias
+PG_SERVER_LIST_FILE="${PG_BASEDIR}/etc/server_list_pg.lst"
+
+
+#---------------------------------------------------------------------------
+# Function: path_remove
+# Remove da variavel PATH o path passado como argumento.
+#
+# Argumentos:
+# $1 : path a ser removido da PATH
+#
+#---------------------------------------------------------------------------
+path_remove()
+{
+    PATH=$(printf "%s" "${PATH}" | awk -v RS=: -v ORS=: '$0 != "'$1'"' | sed 's/:$//');
+}
+
+#---------------------------------------------------------------------------
+# Function: man_path_remove
+# Remove da variavel MANPATH o path passado como argumento.
+#
+# Argumentos:
+# $1 : path a ser removido da MANPATH
+#
+#---------------------------------------------------------------------------
+man_path_remove()
+{
+    MANPATH=$(printf "%s" "${MANPATH}" \
+    | awk -v RS=: -v ORS=: '$0 != "'$1'"' \
+    | sed 's/:$//');
+}
+
+#---------------------------------------------------------------------------
+# Function: unset_pg_vars
+# Efetuar o unset das variaveis de ambiente postgresql
+#
+#---------------------------------------------------------------------------
+unset_pg_vars()
+{
+    ## Remover diretoria de binarios postgresql da PATH
+    for DIR in $(find ${PG_BASEDIR}/pgsql*/bin -maxdepth 0 -type d); do
+        path_remove "${DIR}"
+        export PATH
+    done
+
+    ## Remove diretoria de man pages postgresql da MANPATH
+    for DIR in $(find ${PG_BASEDIR}/pgsql*/share/man -maxdepth 0 -type d); do
+        man_path_remove "${DIR}"
+        export MANPATH
+    done
+
+    ## Variaveis de ambiente usadas pelo cliente/servidor psql
+    unset PGDATA
+    unset PGPORT
+    unset PGHOST
+    
+    ## Variaveis ambiente utilizadas pelos scrips GBD
+    unset PG_DIR
+    unset PG_CLUSTER
+    unset PG_VERSION
+
+    PS1='[\u@\h:\w] $ '
+}
+
+#---------------------------------------------------------------------------
+# Function: set_pg_vars
+# Exportar variaveis
+# PG_CLUSTER PG_VERSION PG_DIR PGDATA PGHOST PGPORT
+#
+# Argumentos:
+# $1 - postgresql cluster name
+# $2 - postgresql base bin dir
+# $3 - postgresql base data dir
+# $4 - postgresql host
+# $5 - postgresql port
+#
+#---------------------------------------------------------------------------
+set_pg_vars()
+{
+    PG_CLUSTER="$1"
+    export PG_CLUSTER
+
+    ## Se queremos ligar por unix socket, nao pode haver variavel PGHOST
+    if [ ! -z "$4" ]; then
+        PGHOST="$4"
+        export PGHOST
+    fi
+
+    ## Pode ser porto ou ficheiro de unix socket
+    if [ ! -z "$5" ]; then
+        PGPORT="$5"
+        export PGPORT
+    fi
+
+    PG_DIR="$2"
+    export PG_DIR
+
+    ## Se for apenas uma instalacao cliente, nao existe PGDATA
+    if [ ! -z "$3" ]; then
+        PGDATA="$3"
+        export PGDATA
+    fi
+
+    PG_VERSION=$(${PG_DIR}/bin/postgres -V | awk '{print $3}')
+    export PG_VERSION
+
+    ## Adicionar diretoria dos binarios postgresql ah PATH
+    PATH="${PATH}:${PG_DIR}/bin"
+    export PATH
+
+    ## Adicionar diretoria dos ficheiros man postgresql ah MANPATH
+    MANPATH="${PG_DIR}/share/man:${MANPATH}"
+    export PATH
+
+    PS1='[${PG_CLUSTER}][\u@\h:\w] $ '
+}
+
+#---------------------------------------------------------------------------
+# Function: set_extra_pg_vars
+# Exportar variaveis, com base no argumento passado
+# Em principo o argumento eh id do ambiente
+#
+# Recebe como argumentos:
+# $1 - id do ambiente
+#
+#---------------------------------------------------------------------------
+set_extra_pg_vars()
+{
+    case "$1" in
+    XXX)        
+        ## exportar variaveis extra para ambiente XX
+        PG_XX="xx"
+        export PG_XX
+        ;;
+    YYY)
+        ## exportar variaveis extra para ambiente YY
+        PG_YY="yy"
+        export PG_YY
+        ;;
+    *)
+        ## variaveis extra para todos as ambientes
+        true
+        ;;
+    esac
+}
+
+#---------------------------------------------------------------------------
+# Efetuar o unset das variaveis de ambiente postgresql
+#
+#---------------------------------------------------------------------------
+unset_extra_pg_vars()
+{
+    ## Variaveis extra de ambiente postgresql
+    true
+    #unset PGXX
+    #unset PGYY
+}
+
+#---------------------------------------------------------------------------
+# Function: get_pg_admin_id_list
+# Devolver lista dos ids com configuracao admin, separados por espacos
+#
+#---------------------------------------------------------------------------
+get_pg_admin_id_list()
+{
+    ## Ler ficheiro com lista de instancias (definido anteriormente envpg)
+    ## Remove linhas comecadas por espacos, tabs e cardinal ou remove tudo depois do cardinal
+    ## Remove linhas "vazias"
+    L_SPACE=""
+    sed -e 's/[[:blank:]]*#.*// ; /^[[:blank:]]*$/d' "${PG_SERVER_LIST_FILE}" |
+        while IFS="|" read -r L_OPTION L_DESC L_PGTYPE L_PG_CLUSTER L_PGBASEDIR L_PGDATADIR L_PGHOST L_PGPORT; do
+            if [ "${L_PGTYPE}" = "admin" ]; then
+                printf "%s%s" "${L_SPACE}" "${L_OPTION}"
+            fi
+            L_SPACE=" "
+        done
+    printf "\n"
+}

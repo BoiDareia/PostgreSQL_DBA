@@ -1,0 +1,13 @@
+# id : identificador unico para a escolha no menu
+# description : descricao do ambiente
+# type        : tipo de configuracao, valores possiveis (admin|client)
+# clustername : nome do cluster/instancia
+# pgdir       : pasta base dos binarios postgresql
+# datadir     : pasta base do cluster
+# hostname    : hostname / ip do servidor que aloja o cluster (vazio indica licacao local com unix socket)
+# port        : porto tcp onde o cluster escuta ligacoes 
+#
+#id|description|type|clustername|basedir|datadir|hostname|port
+1|pg marquins (tcp)   |admin|marquins|/postgresql/basedir/pgsql101|/postgresql/marquins/data|pg_server_001.marques.localdomain|5432
+2|pg marquins (local) |client|marquins|/postgresql/basedir/pgsql101|/postgresql/marquins/data||
+3|pg marquins (client)|client|marquins|/postgresql/basedir/pgsql101||pg_server_001.marques.localdomain|5432

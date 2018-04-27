@@ -1,0 +1,75 @@
+## Funcoes de utilitarias que sao usadas com frequencia
+
+
+#---------------------------------------------------------------------------
+# Function: gbd_write_out
+# Adiciona campos de logging ah mensagem:
+# timestamp hostname PID instancia tecnologia componente : criticidade : mensagem
+#
+# Parametros:
+# $1 - hostname
+# $2 - instancia
+# $3 - tecnologia
+# $4 - componente
+# $5 - tipo de mensagem (ERROR|WARNING|INFO|FATAL|CRITICAL|DEBUG)
+# $6 - mensagem
+#
+# De acordo com as diretivas Altice para os logs
+# When : timestamp
+# Who  : hostname + pid + instancia + tecnologia
+# Where:  
+# what :
+# Why  : mensagem
+# Value/Cost/Metric: []
+# Severity: criticidade
+#---------------------------------------------------------------------------
+gbd_write_out()
+{
+    printf "%s %s %s %s %s %s : %s : %s\n" \
+        $(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+        "$1" \
+        "$$" \
+        "$2" \
+        "$3" \
+        "$4" \
+        "$5" \
+        "$6"
+}
+
+
+#-------------------------------------------------------------------------
+# Function: gbd_cleanup_lock
+# Efetua a remocao da diretoria de lock
+#
+# Parametros:
+# $1 : nome da diretoria de lock
+# $2 : variavel de controlo 
+#
+#-------------------------------------------------------------------------
+function gbd_cleanup_lock
+{
+    # Verifica se a diretoria de lock foi criada nesta execucao do script
+    if [ $2 -eq 1 ]; then
+        # Verifica se o nome da diretoria de lock nao eh "vazio"
+        if [ ! -z "$1" ]; then
+            # Verifica se a diretoria de lock existe
+            if [ -d "$1" ]; then
+                # A diretoria de lock existe, remover todos os ficheiros
+                # que contem e finalmente a propria diretoria 
+                # (evitar rm -rf com path absoluto).
+                # Para tentar evitar "acidentes" com o rm -rf, efetuar 
+                # cd para a diretoria.
+                cd "$1"
+                if [ $? -eq 0 ]; then
+                    # Remover todos os ficheiros e subdiretorias
+                    rm -rf * 2>/dev/null
+                    # Subir para a diretoria pai, e remove-la
+                    cd ..
+                    if [ $? -eq 0 ]; then
+                        rmdir "$1"
+                    fi
+                fi
+            fi
+        fi
+    fi
+}

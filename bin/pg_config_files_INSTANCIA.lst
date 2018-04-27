@@ -1,0 +1,4 @@
+/postgresql/INSTANCIA/data/pg_hba.conf
+/postgresql/INSTANCIA/data/pg_ident.conf
+/postgresql/INSTANCIA/data/postgresql.auto.conf
+/postgresql/INSTANCIA/data/postgresql.conf
