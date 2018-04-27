@@ -1,3 +1,2 @@
-# hello-world
-A test repository
-I'm a DBA looking to thrive in the IT world
+# PostgreSQL_DBA
+Some random scripts that I use as a DBA admin Here is the general description of each one.
