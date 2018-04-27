@@ -7,7 +7,7 @@ export PG_BASEDIR
 
 ## Definicao de contatos para a alarmitica
 GBD_FROM_EMAIL="postgres"
-GBD_TO_EMAIL="dba-postgres@telecom.pt"
+GBD_TO_EMAIL="dba-postgres@telecom.com"
 export GBD_FROM_EMAIL
 export GBD_TO_EMAIL
 
