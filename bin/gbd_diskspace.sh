@@ -54,7 +54,7 @@ S_COUNTERFULLPATHNAME="/tmp/gbd_diskspace.counter"
 S_TMPCOUNTERFULLPATHNAME="/tmp/gbd_diskspace_counter.tmp"
 
 S_EMAILFROM="posgtres"
-S_EMAILTO="dba-postgres@telecom.pt"
+S_EMAILTO="dba-postgres@telecom.com"
 S_EMAILCC=""
 
 S_LIMITEENVIOEMAILS=3
@@ -66,7 +66,7 @@ S_DEVEENVIARSMS=0
 # Destinatario de sms para debug
 S_DESTINATARIOSSMS="123456789"
 
-# Parametros que n„o devem ser alterados na execucao do script
+# Parametros que n√£o devem ser alterados na execucao do script
 S_STATUSNORMAL="NORMAL"
 S_STATUSWARNING="WARNING"
 S_STATUSCRITICAL="CRITICAL"
@@ -333,7 +333,7 @@ fi
 
 printmessage "${S_MSGDBG}" "Analise de filesystems"
 
-# Para cada linha do ficheiro de configuraÁ„o, ler 3 parametros
+# Para cada linha do ficheiro de configura√ß√£o, ler 3 parametros
 # FILESYSTEM | PERCENTAGEM AVISO | PERCENTAGEM CRITICO
 # Usar o "|" como separador
 while IFS="|" read -r linha warning critical lixo; do
