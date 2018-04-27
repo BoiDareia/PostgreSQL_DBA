@@ -45,7 +45,7 @@ pg_ctl stop -D $PGDATA
 
 ## No Slave fazer um backup ao Master e importá-lo 
 
-pg_basebackup -h cjpism44.telecom.pt -U repluser -Ft -X fetch -D - > /tmp/backup.tar
+pg_basebackup -h machine.telecom.com -U repluser -Ft -X fetch -D - > /tmp/backup.tar
 
 rm -rf /postgresql/itsm/data/*
 
@@ -60,7 +60,7 @@ $ vi $DATADIR/recovery.conf
 standby_mode = on
 
 # This is how to connect to the master.
-primary_conninfo = 'host=cjpism44.telecom.pt user=repluser'
+primary_conninfo = 'host=machine.telecom.Com user=repluser'
 
 ## Iniciar instância no Slave 
 
