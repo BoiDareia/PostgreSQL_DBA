@@ -22,8 +22,8 @@
 S_PROGNAME="${0##*/}"
 S_HOSTNAME=$(hostname -s)
 
-S_CONNECTION_STRING_MASTER="chqism57.telecom.pt:5432"
-S_CONNECTION_STRING_SLAVE="cjqism58.telecom.pt:5432"
+S_CONNECTION_STRING_MASTER="master.telecom.com:5432"
+S_CONNECTION_STRING_SLAVE="slave.telecom.com:5432"
 S_PSQL_BIN_PATH="${PG_DIR}/bin"
 S_WAL_MAX_DIFF=5
 
